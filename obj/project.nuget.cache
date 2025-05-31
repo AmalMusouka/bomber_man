@@ -1,8 +1,16 @@
 {
   "version": 2,
-  "dgSpecHash": "1E5El/Sq7n0=",
+  "dgSpecHash": "DF0XgIXbo1A=",
   "success": true,
   "projectFilePath": "/home/amalmusouka/bomber_man/bomber_man.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/home/amalmusouka/.nuget/packages/atksharp/3.24.24.95/atksharp.3.24.24.95.nupkg.sha512",
+    "/home/amalmusouka/.nuget/packages/cairosharp/3.24.24.95/cairosharp.3.24.24.95.nupkg.sha512",
+    "/home/amalmusouka/.nuget/packages/gdksharp/3.24.24.95/gdksharp.3.24.24.95.nupkg.sha512",
+    "/home/amalmusouka/.nuget/packages/giosharp/3.24.24.95/giosharp.3.24.24.95.nupkg.sha512",
+    "/home/amalmusouka/.nuget/packages/glibsharp/3.24.24.95/glibsharp.3.24.24.95.nupkg.sha512",
+    "/home/amalmusouka/.nuget/packages/gtksharp/3.24.24.95/gtksharp.3.24.24.95.nupkg.sha512",
+    "/home/amalmusouka/.nuget/packages/pangosharp/3.24.24.95/pangosharp.3.24.24.95.nupkg.sha512"
+  ],
   "logs": []
 }
