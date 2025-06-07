@@ -28,6 +28,21 @@ class TileSet
         
     }
 }
+
+class Player
+{
+    public double x;
+    public double y;
+    public double speed = 2;
+    public ImageSurface character;
+
+    public Player(string path)
+    {
+        x = 16;
+        y = 16;
+        character = new ImageSurface(path);
+    }
+}
 class Game
 {
     private int rows = 13;
