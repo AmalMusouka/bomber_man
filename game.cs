@@ -78,6 +78,21 @@ class View : DrawingArea
 
     protected override bool OnDrawn(Context c)
     {
+
+        double scale = 3.0;
+        int gridWidth = rows * TileSize;
+        int gridHeight = cols * TileSize;
+        
+        int areaWidth = Allocation.Width;
+        int areaHeight = Allocation.Height;
+        
+        double offsetX = (areaWidth - gridWidth) / 2.0;
+        double offsetY = (areaHeight - gridHeight) / 2.0;
+
+        c.Save();
+        c.Translate(offsetX, offsetY);
+        
+        
         for (int i = 0; i < 13; i++)
         {
             for (int j = 0; j < 11; j++)
