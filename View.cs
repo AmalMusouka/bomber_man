@@ -11,12 +11,14 @@ class View : DrawingArea
     Game game;
     Color backgroundColor = new Color(173, 173, 173);
     ImageSurface player1 = new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_down.png");
-    private PlayerAnimator player1_animator;
+    public PlayerAnimator player1_animator;
     private Tiles[,] grid;
     private TileSet tileSet;
     private int rows = 13;
     private int cols = 11;
-    private const int TileSize = 16;
+    private const int tile_width = GameConfig.TILE_WIDTH;
+    private const int tile_height = GameConfig.TILE_HEIGHT;
+    public List<(int, int)> tiles = new List<(int, int)>();
 
     public void OnKeyPressEvent(object o, KeyPressEventArgs args)
     {
@@ -66,45 +68,27 @@ class View : DrawingArea
     {
         this.game = game;
         player1_animator = new PlayerAnimator();
-        grid = new Tiles[rows, cols];
         tileSet = new TileSet();
-        SetSizeRequest(TileSize * rows, TileSize * cols);
-
-        InitializeGrid();
+        SetSizeRequest(tile_width * rows, tile_height * cols);
         AddEvents((int)EventMask.AllEventsMask);
 
     }
 
-    void InitializeGrid()
-    {
-        for (int i = 0; i < rows; i++)
-        {
-            for (int j = 0; j < cols; j++)
-            {
-                if ( (i == 0 || i == rows - 1 || j == 0 || j == cols - 1) || ( i % 2 == 0 && j % 2 == 0 ))
-                {
-                    grid[i, j] = Tiles.UnbreakableWall;
-                }
-            }
-        }
-    }
+
 
     protected override bool OnDrawn(Context c)
     {
-        int scale = 2;
-        
         for (int i = 0; i < 13; i++)
         {
             for (int j = 0; j < 11; j++)
             {
-                Tiles tile = grid[i, j];
+                Tiles tile = (Tiles)game.grid[i, j];
                 ImageSurface surface = tileSet.Surfaces[tile];
                 c.Save();
-                c.Translate(j * TileSize * scale, i * TileSize * scale);
-                c.Scale(scale, scale);
+                c.Translate(j * tile_width, i * tile_height);
+                c.Scale((double)tile_width / surface.Width, (double)tile_height / surface.Height);
                 c.SetSourceSurface(surface, 0, 0);
                 c.Paint();
-                
                 c.Restore();
             }
         }
@@ -131,10 +115,11 @@ class View : DrawingArea
         }
         
         var sprite = player1_animator.GetCurrentFrame();
+        
         c.Save();
-        c.Translate(game.player1.player_x, game.player1.player_y);
-        c.Scale(2.0, 2.0); 
-        c.SetSourceSurface(sprite, game.player1.player_x, game.player1.player_y);
+        c.Translate(game.player1.player_x , game.player1.player_y );
+        c.Scale((double)tile_width / sprite.Width, (double)tile_height / sprite.Height); 
+        c.SetSourceSurface(sprite, 0, 0);
         c.Paint();
         c.Restore();
         return true;

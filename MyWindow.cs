@@ -12,13 +12,13 @@ class MyWindow : Gtk.Window
 
     bool on_timeout()
     {
-        game.Tick();
+        game.Tick(view.player1_animator.GetCurrentFrame(), 2, 21);
         QueueDraw();
         return true;
     }
     public MyWindow() : base("BomberMan")
     {
-        SetDefaultSize(13 * 16, 11 * 16);
+        SetDefaultSize(13 * 19, 11 * 21);
         SetPosition(WindowPosition.CenterOnParent);
         view = new View(game);
         Add(view);
