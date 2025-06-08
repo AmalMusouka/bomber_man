@@ -3,6 +3,8 @@ using Gtk;
 using Cairo;
 using Color = Cairo.Color;
 using System;
+using Key = Gdk.Key;
+using Timeout = GLib.Timeout;
 
 enum Tiles
 {
@@ -31,16 +33,33 @@ class TileSet
 
 class Player
 {
-    public double x;
-    public double y;
-    public double speed = 2;
-    public ImageSurface character;
+    public int player_x, player_y;
+    private int speed = 5;     // horizontal velocity
 
-    public Player(string path)
+    public Player(int start_x, int start_y)
     {
-        x = 16;
-        y = 16;
-        character = new ImageSurface(path);
+        player_x = start_x;
+        player_y = start_y;
+    }
+
+    public void Move(bool move_left, bool move_right, bool move_up, bool move_down) {
+        if (move_left)
+        {
+            player_x -= speed;
+        }
+        else if (move_right)
+        {
+            player_x += speed;
+        }
+        else if (move_up)
+        {
+            player_y -= speed;
+        }
+        else if (move_down)
+        {
+            player_y += speed;
+        }
+    
     }
 }
 class Game
@@ -48,6 +67,14 @@ class Game
     private int rows = 13;
     private int cols = 11;
     public int[,] grid;
+    public Player player1 = new Player(100, 100);
+    
+    public bool player1_left, player1_right, player2_up, player1_down;
+
+    public void Tick()
+    {
+        player1.Move(player1_left, player1_right, player2_up, player1_down);
+    }
 
     
     public Game()
@@ -57,17 +84,58 @@ class Game
 }
 class View : DrawingArea
 {
-
+    Game game;
     Color backgroundColor = new Color(173, 173, 173);
-    //ImageSurface player = new ImageSurface("sprites/player.png");
+    ImageSurface player1 = new ImageSurface("/home/amalmusouka/bomber_man/sprites/player.png");
     private Tiles[,] grid;
     private TileSet tileSet;
     private int rows = 13;
     private int cols = 11;
     private const int TileSize = 16;
 
-    public View()
+    public void OnKeyPressEvent(object o, KeyPressEventArgs args)
     {
+        switch (args.Event.Key)
+        {
+            // player 1
+            case Key.a :
+                game.player1_left = true;
+                break;
+            case Key.d :
+                game.player1_right = true;
+                break;
+            case Key.w :
+                game.player2_up = true;
+                break;
+            case Key.s :
+                game.player1_down = true;
+                break;
+        }   
+    }
+
+    public void OnKeyReleaseEvent(object o, KeyReleaseEventArgs args)
+    {
+        switch (args.Event.Key)
+        {
+            // player 1
+            case Key.a :
+                game.player1_left = false;
+                break;
+            case Key.d :
+                game.player1_right = false;
+                break;
+            case Key.w :
+                game.player2_up = false;
+                break;
+            case Key.s :
+                game.player1_down = false;
+                break;
+        }   
+    }
+
+    public View(Game game)
+    {
+        this.game = game;
         grid = new Tiles[rows, cols];
         tileSet = new TileSet();
         SetSizeRequest(TileSize * rows, TileSize * cols);
@@ -93,8 +161,10 @@ class View : DrawingArea
 
     protected override bool OnDrawn(Context c)
     {
-
-        double scale = 3.0;
+        c.SetSourceSurface(player1, game.player1.player_x, game.player1.player_y );
+        c.Paint();
+        return true;
+        /*double scale = 3.0;
         int gridWidth = rows * TileSize;
         int gridHeight = cols * TileSize;
         
@@ -118,18 +188,34 @@ class View : DrawingArea
                 c.Paint();
             }
         }
-        return true;
+        return true;*/
     }
     
 }
 class MyWindow : Gtk.Window
 {
-    
+    Game game = new Game();
+    View view;
+
+    bool on_timeout()
+    {
+        game.Tick();
+        QueueDraw();
+        return true;
+    }
     public MyWindow() : base("BomberMan")
     {
         SetDefaultSize(13 * 16, 11 * 16);
         SetPosition(WindowPosition.CenterOnParent);
-        Add(new View());
+        view = new View(game);
+        Add(view);
+        
+        AddEvents((int)EventMask.KeyPressMask | (int)EventMask.KeyReleaseMask);
+
+        KeyPressEvent += view.OnKeyPressEvent;
+        KeyReleaseEvent += view.OnKeyReleaseEvent;
+        
+        Timeout.Add(30, on_timeout);
         ShowAll();
     }
     protected override bool OnDeleteEvent(Event e)
