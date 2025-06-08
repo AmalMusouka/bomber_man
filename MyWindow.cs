@@ -12,7 +12,7 @@ class MyWindow : Gtk.Window
 
     bool on_timeout()
     {
-        game.Tick(view.player1_animator.GetCurrentFrame(), 2, 21);
+        game.Tick(view.player1_animator.GetCurrentFrame());
         QueueDraw();
         return true;
     }

@@ -5,13 +5,12 @@ using Gdk;
 using Color = Cairo.Color;
 using Key = Gdk.Key;
 
-
 class View : DrawingArea
 {
     Game game;
     Color backgroundColor = new Color(173, 173, 173);
-    ImageSurface player1 = new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_down.png");
     public PlayerAnimator player1_animator;
+    public BombAnimator bomb_animator;
     private Tiles[,] grid;
     private TileSet tileSet;
     private int rows = 13;
@@ -41,6 +40,10 @@ class View : DrawingArea
                 game.player1_down = true;
                 game.last_direction = "down";
                 break;
+            case Key.Control_L :
+                game.player1.PlaceBomb();
+                game.player1_bomb = true;
+                break;
         }   
     }
 
@@ -61,6 +64,7 @@ class View : DrawingArea
             case Key.s :
                 game.player1_down = false;
                 break;
+
         }   
     }
 
@@ -68,13 +72,12 @@ class View : DrawingArea
     {
         this.game = game;
         player1_animator = new PlayerAnimator();
+        bomb_animator = new BombAnimator();
         tileSet = new TileSet();
         SetSizeRequest(tile_width * rows, tile_height * cols);
         AddEvents((int)EventMask.AllEventsMask);
 
     }
-
-
 
     protected override bool OnDrawn(Context c)
     {
@@ -90,6 +93,27 @@ class View : DrawingArea
                 c.SetSourceSurface(surface, 0, 0);
                 c.Paint();
                 c.Restore();
+            }
+        }
+
+        var bomb = game.player1.current_bomb;
+        
+        if (bomb != null)
+        {
+            //var bomb_sprite = new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_1.png");
+            bomb_animator.SetAnimation(bomb.exploded ? "explosion" : "bomb");
+            var bomb_sprite = bomb_animator.GetCurrentFrame();
+            
+            c.Save();
+            c.Translate(bomb.x, bomb.y);
+            c.Scale((double)tile_width / bomb_sprite.Width, (double)tile_height / bomb_sprite.Height);
+            c.SetSourceSurface(bomb_sprite, 0, 0);
+            c.Paint();
+            c.Restore();
+
+            if (bomb.exploded && bomb_animator.ExplosionEnded())
+            {
+                bomb.explosion_finished = true;
             }
         }
         
@@ -123,7 +147,6 @@ class View : DrawingArea
         c.Paint();
         c.Restore();
         return true;
-        
     }
     
 }

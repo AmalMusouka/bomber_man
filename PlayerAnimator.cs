@@ -36,37 +36,36 @@ class PlayerAnimator
             },
             {
                 "move_down", [
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_down1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_walk_down1.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_down.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_down2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_walk_down2.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_down.png"),
                 ]
             },
             {
                 "move_right", [
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_right1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_walk_right1.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_right.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_right2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_walk_right2.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_right.png"),
                 ]
             },
             {
                 "move_left", [
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_left1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_walk_left1.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_left.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_left2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_walk_left2.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_left.png"),
                 ]   
             },
             {
                 "move_up", [
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_up1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_walk_up1.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_up.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_up2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_walk_up2.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_up.png"),
                 ]   
             }
-            
         };
 
     }

@@ -1,7 +1,6 @@
 namespace bomber_man;
 using Gtk;
 
-
 class Start
 {
     static void Main()
