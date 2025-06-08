@@ -34,7 +34,7 @@ class TileSet
 class Player
 {
     public int player_x, player_y;
-    private int speed = 5;     // horizontal velocity
+    private int speed = 2;     // horizontal velocity
 
     public Player(int start_x, int start_y)
     {
@@ -70,6 +70,7 @@ class Game
     public Player player1 = new Player(100, 100);
     
     public bool player1_left, player1_right, player2_up, player1_down;
+    public string last_direction = "down";
 
     public void Tick()
     {
@@ -82,11 +83,111 @@ class Game
         grid = new int[rows, cols];
     }
 }
+
+class PlayerAnimator
+{
+    private Dictionary<string, ImageSurface[]> animations;
+    private int currentFrame = 0;
+    private int frameCounter = 0;
+    private int frameSpeed = 6; // ticks per switch
+
+    private string currentAnimation = "idle_down";
+
+    public PlayerAnimator()
+    {
+        animations = new Dictionary<string, ImageSurface[]>
+        {
+            {
+                "idle_down", [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_down.png")
+                ]
+            },
+            {
+                "idle_left", [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_left.png")
+                ]
+            },
+            {
+                "idle_right", [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_right.png")
+                ]
+            },
+            {
+                "idle_up", [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_up.png")
+                ]
+            },
+            {
+                "move_down", [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_down1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_down.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_down2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_down.png"),
+                ]
+            },
+            {
+                "move_right", [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_right1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_right.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_right2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_right.png"),
+                ]
+            },
+            {
+                "move_left", [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_left1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_left.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_left2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_left.png"),
+                ]   
+            },
+            {
+                "move_up", [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_up1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_up.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_move_up2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_up.png"),
+                ]   
+            }
+            
+        };
+
+    }
+
+    public void SetAnimation(string animation)
+    {
+        if (currentAnimation != animation)
+        {
+            currentAnimation = animation;
+            currentFrame = 0;
+            frameCounter = 0;
+        }
+    }
+
+    public ImageSurface GetCurrentFrame()
+    {
+        var frames = animations[currentAnimation];
+        if (frames.Length == 1)
+        {
+            return frames[0];
+        }
+        
+        frameCounter++;
+
+        if (frameCounter >= frameSpeed)
+        {
+            frameCounter = 0;
+            currentFrame = (currentFrame + 1) % frames.Length;
+        }
+        return frames[currentFrame];
+    }
+}
 class View : DrawingArea
 {
     Game game;
     Color backgroundColor = new Color(173, 173, 173);
-    ImageSurface player1 = new ImageSurface("/home/amalmusouka/bomber_man/sprites/player.png");
+    ImageSurface player1 = new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_down.png");
+    private PlayerAnimator player1_animator;
     private Tiles[,] grid;
     private TileSet tileSet;
     private int rows = 13;
@@ -100,15 +201,19 @@ class View : DrawingArea
             // player 1
             case Key.a :
                 game.player1_left = true;
+                game.last_direction = "left";
                 break;
             case Key.d :
                 game.player1_right = true;
+                game.last_direction = "right";
                 break;
             case Key.w :
                 game.player2_up = true;
+                game.last_direction = "up";
                 break;
             case Key.s :
                 game.player1_down = true;
+                game.last_direction = "down";
                 break;
         }   
     }
@@ -136,6 +241,7 @@ class View : DrawingArea
     public View(Game game)
     {
         this.game = game;
+        player1_animator = new PlayerAnimator();
         grid = new Tiles[rows, cols];
         tileSet = new TileSet();
         SetSizeRequest(TileSize * rows, TileSize * cols);
@@ -161,8 +267,34 @@ class View : DrawingArea
 
     protected override bool OnDrawn(Context c)
     {
-        c.SetSourceSurface(player1, game.player1.player_x, game.player1.player_y );
+        if (game.player1_down)
+        {
+            player1_animator.SetAnimation("move_down");
+        }
+        else if (game.player1_left)
+        {
+            player1_animator.SetAnimation("move_left");
+        }
+        else if (game.player1_right)
+        {
+            player1_animator.SetAnimation("move_right");
+        }
+        else if (game.player2_up)
+        {
+            player1_animator.SetAnimation("move_up");
+        }
+        else
+        {
+            player1_animator.SetAnimation("idle_" + game.last_direction);
+        }
+        
+        var sprite = player1_animator.GetCurrentFrame();
+        c.Save();
+        c.Translate(game.player1.player_x, game.player1.player_y);
+        c.Scale(2.0, 2.0); 
+        c.SetSourceSurface(sprite, game.player1.player_x, game.player1.player_y);
         c.Paint();
+        c.Restore();
         return true;
         /*double scale = 3.0;
         int gridWidth = rows * TileSize;
@@ -229,7 +361,6 @@ class Start
 {
     static void Main()
     {
-        Console.WriteLine("Working Directory: " + System.IO.Directory.GetCurrentDirectory());
         Application.Init();
         MyWindow win = new MyWindow();
         Application.Run();
