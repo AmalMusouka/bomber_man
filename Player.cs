@@ -3,16 +3,18 @@ using Cairo;
 
 public class Player
 {
-    
-    public int player_x, player_y;
-    public Bomb current_bomb = null;
-    public bool has_bomb = true;
     private int speed = 5;     // horizontal velocity
 
-    public Player(int start_x, int start_y)
+    public int player_x, player_y;
+    public Bomb current_bomb = null;
+    public bool is_dead = false;
+    Game game;
+
+    public Player(int start_x, int start_y, Game game)
     {
         player_x = start_x;
         player_y = start_y;
+        this.game = game;
     }
 
     public void Move(bool move_left, bool move_right, bool move_up, bool move_down, Func<System.Drawing.Rectangle, bool> collision_check, ImageSurface sprite)
@@ -20,7 +22,11 @@ public class Player
 
         int new_player_x = player_x;
         int new_player_y = player_y;
-        
+
+        if (is_dead)
+        {
+            return;
+        }
         if (move_left)
         {
             new_player_x -= speed;
@@ -53,14 +59,28 @@ public class Player
 
     public void PlaceBomb()
     {
-        Console.WriteLine("Space pressed");
+        
+        int player_center_x = player_x + GameConfig.TILE_WIDTH / 2;
+        int player_center_y = player_y + GameConfig.TILE_HEIGHT / 2;
+        
+        int tile_x = player_center_x / GameConfig.TILE_WIDTH;
+        int tile_y = player_center_y / GameConfig.TILE_HEIGHT;
+
         if (current_bomb == null)
         {
-            int bomb_x = (player_x / GameConfig.TILE_WIDTH) * GameConfig.TILE_WIDTH;
-            int bomb_y = (player_y / GameConfig.TILE_HEIGHT) * GameConfig.TILE_HEIGHT;
+            if (tile_x >= 0 && tile_x < game.grid.GetLength(1) && tile_y >= 0 && tile_y < game.grid.GetLength(0))
+            {
+                int tile = game.grid[tile_x, tile_y];
+                if (tile != (int)Tiles.UnbreakableWall && tile != (int)Tiles.BreakableWall)
+                {
 
-            current_bomb = new Bomb(bomb_x, bomb_y);
-            Console.WriteLine("Bomb placed at " + bomb_x + ", " + bomb_y);
+                    int bomb_x = tile_x * GameConfig.TILE_WIDTH;
+                    int bomb_y = tile_y * GameConfig.TILE_HEIGHT;
+
+                    current_bomb = new Bomb(bomb_x, bomb_y);
+
+                }
+            }
         }
     }
 }

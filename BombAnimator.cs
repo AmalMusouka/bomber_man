@@ -4,74 +4,105 @@ using Cairo;
 public class BombAnimator
 {
     private Dictionary<string, ImageSurface[]> animations;
-    private int currentFrame = 0;
-    private int frameCounter = 0;
-    public int frameSpeed = 8; // ticks per switch
+    private int current_frame = 0;
+    private int frame_counter = 0;
+    public int frame_speed = 8; // ticks per switch
 
-    private string currentAnimation = "bomb";
+    private string current_animation = "bomb";
     
     public BombAnimator()
     {
         animations = new Dictionary<string, ImageSurface[]>
         {
             {
-                "bomb", [
+                "bomb", 
+                [
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_1.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_2.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_3.png")
-
                 ]
             },
             {
-                "explosion", [
+                "explosion", 
+                [
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/explosion_1.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/explosion_2.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/explosion_3.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/explosion_4.png")
+                ]
+            },
+            {
+                "horizontal_explosion",
+                [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/horizontal_explosion_1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/horizontal_explosion_2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/horizontal_explosion_3.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/horizontal_explosion_4.png")
+                ]
+            },
+            {
+                "vertical_explosion",
+                [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/vertical_explosion_1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/vertical_explosion_2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/vertical_explosion_3.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/vertical_explosion_4.png"),
                 ]
             }
 
         };
     }
 
+    public bool ExplosionBegin()
+    {
+        return current_animation == "explosion" && current_frame == 0;
+    }
     public bool ExplosionEnded()
     {
-        return currentAnimation == "explosion" && currentFrame == animations[currentAnimation].Length - 1 && frameCounter == 0;
+        return current_animation == "explosion" && current_frame == animations[current_animation].Length - 1 && frame_counter == 0;
     }
     public void SetAnimation(string animation)
     {
-        if (currentAnimation != animation)
+        if (current_animation != animation)
         {
-            currentAnimation = animation;
-            currentFrame = 0;
-            frameCounter = 0;
+            current_animation = animation;
+            current_frame = 0;
+            frame_counter = 0;
         }
 
         if (animation == "explosion")
         {
-            frameSpeed = 2;
+            frame_speed = 4;
         }
         else
         {
-            frameSpeed = 8;
+            frame_speed = 8;
         }
     }
 
     public ImageSurface GetCurrentFrame()
     {
-        var frames = animations[currentAnimation];
-        if (frames.Length == 1)
+        return animations[current_animation][current_frame];
+    }
+    
+    public void UpdateAnimation()
+    {
+        frame_counter++;
+        if (frame_counter >= frame_speed)
         {
-            return frames[0];
+            frame_counter = 0;
+            current_frame++;
+            if (current_frame >= animations[current_animation].Length)
+            {
+                if (current_animation == "bomb")
+                {
+                    current_frame = 0;
+                }
+                else
+                {
+                    current_frame = animations[current_animation].Length - 1;
+                }
+            }
         }
-        
-        frameCounter++;
-
-        if (frameCounter >= frameSpeed)
-        {
-            frameCounter = 0;
-            currentFrame = (currentFrame + 1) % frames.Length;
-        }
-        return frames[currentFrame];
     }
 }

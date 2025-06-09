@@ -19,6 +19,23 @@ class View : DrawingArea
     private const int tile_height = GameConfig.TILE_HEIGHT;
     public List<(int, int)> tiles = new List<(int, int)>();
 
+    public View(Game game)
+    {
+        this.game = game;
+        player1_animator = new PlayerAnimator();
+        bomb_animator = new BombAnimator();
+        tileSet = new TileSet();
+        SetSizeRequest(tile_width * rows, tile_height * cols);
+        AddEvents((int)EventMask.AllEventsMask);
+        GLib.Timeout.Add(16, () =>
+        {
+            player1_animator.UpdateAnimation();
+            bomb_animator.UpdateAnimation();
+            QueueDraw();  
+            return true;   
+        });
+    }
+    
     public void OnKeyPressEvent(object o, KeyPressEventArgs args)
     {
         switch (args.Event.Key)
@@ -42,7 +59,6 @@ class View : DrawingArea
                 break;
             case Key.Control_L :
                 game.player1.PlaceBomb();
-                game.player1_bomb = true;
                 break;
         }   
     }
@@ -68,17 +84,6 @@ class View : DrawingArea
         }   
     }
 
-    public View(Game game)
-    {
-        this.game = game;
-        player1_animator = new PlayerAnimator();
-        bomb_animator = new BombAnimator();
-        tileSet = new TileSet();
-        SetSizeRequest(tile_width * rows, tile_height * cols);
-        AddEvents((int)EventMask.AllEventsMask);
-
-    }
-
     protected override bool OnDrawn(Context c)
     {
         for (int i = 0; i < 13; i++)
@@ -96,14 +101,13 @@ class View : DrawingArea
             }
         }
 
-        var bomb = game.player1.current_bomb;
-        
-        if (bomb != null)
+        if (game.player1 != null && game.player1.current_bomb != null)
         {
+            var bomb = game.player1.current_bomb;
             //var bomb_sprite = new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_1.png");
             bomb_animator.SetAnimation(bomb.exploded ? "explosion" : "bomb");
             var bomb_sprite = bomb_animator.GetCurrentFrame();
-            
+
             c.Save();
             c.Translate(bomb.x, bomb.y);
             c.Scale((double)tile_width / bomb_sprite.Width, (double)tile_height / bomb_sprite.Height);
@@ -116,37 +120,53 @@ class View : DrawingArea
                 bomb.explosion_finished = true;
             }
         }
-        
-        if (game.player1_down)
+
+        if (game.player1 != null)
         {
-            player1_animator.SetAnimation("move_down");
+            if (game.player1.is_dead)
+            {
+                player1_animator.SetAnimation("death");
+
+                if (player1_animator.PlayerDeathEnd())
+                {
+                    game.player1 = null;
+                    return true;
+                }
+            }
+            else
+            {
+                if (game.player1_down)
+                {
+                    player1_animator.SetAnimation("move_down");
+                }
+                else if (game.player1_left)
+                {
+                    player1_animator.SetAnimation("move_left");
+                }
+                else if (game.player1_right)
+                {
+                    player1_animator.SetAnimation("move_right");
+                }
+                else if (game.player2_up)
+                {
+                    player1_animator.SetAnimation("move_up");
+                }
+                else
+                {
+                    player1_animator.SetAnimation("idle_" + game.last_direction);
+                }
+            }
+
+            var sprite = player1_animator.GetCurrentFrame();
+
+            c.Save();
+            c.Translate(game.player1.player_x, game.player1.player_y);
+            c.Scale((double)tile_width / sprite.Width, (double)tile_height / sprite.Height);
+            c.SetSourceSurface(sprite, 0, 0);
+            c.Paint();
+            c.Restore();
         }
-        else if (game.player1_left)
-        {
-            player1_animator.SetAnimation("move_left");
-        }
-        else if (game.player1_right)
-        {
-            player1_animator.SetAnimation("move_right");
-        }
-        else if (game.player2_up)
-        {
-            player1_animator.SetAnimation("move_up");
-        }
-        else
-        {
-            player1_animator.SetAnimation("idle_" + game.last_direction);
-        }
-        
-        var sprite = player1_animator.GetCurrentFrame();
-        
-        c.Save();
-        c.Translate(game.player1.player_x , game.player1.player_y );
-        c.Scale((double)tile_width / sprite.Width, (double)tile_height / sprite.Height); 
-        c.SetSourceSurface(sprite, 0, 0);
-        c.Paint();
-        c.Restore();
+
         return true;
     }
-    
 }

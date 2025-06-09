@@ -10,6 +10,9 @@ public class Bomb
     
     public bool exploded = false;
     public bool explosion_finished = false;
+
+    public int tile_x;
+    public int tile_y;
     
     public Bomb(int bomb_x, int bomb_y, int explosion_radius = 2, int time = 3000)
     {
@@ -18,6 +21,9 @@ public class Bomb
         radius = explosion_radius;
         timer = time;
         placed_time = DateTime.Now;
+
+        tile_x = x / GameConfig.TILE_HEIGHT;
+        tile_y = y / GameConfig.TILE_HEIGHT;
     }
 
     public bool Check()
@@ -34,5 +40,10 @@ public class Bomb
     public void Explode()
     {
         exploded = true;
+    }
+
+    public System.Drawing.Rectangle ExplosionRect()
+    {
+        return new System.Drawing.Rectangle(tile_x * GameConfig.TILE_WIDTH, tile_y * GameConfig.TILE_WIDTH, GameConfig.TILE_HEIGHT, GameConfig.TILE_WIDTH);
     }
 }

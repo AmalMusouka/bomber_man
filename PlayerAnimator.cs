@@ -4,11 +4,11 @@ using Cairo;
 class PlayerAnimator
 {
     private Dictionary<string, ImageSurface[]> animations;
-    private int currentFrame = 0;
-    private int frameCounter = 0;
-    private int frameSpeed = 6; // ticks per switch
+    private int current_frame = 0;
+    private int frame_counter = 0;
+    private int frame_speed = 6; // ticks per switch
 
-    private string currentAnimation = "idle_down";
+    public string current_animation = "idle_down";
 
     public PlayerAnimator()
     {
@@ -65,36 +65,54 @@ class PlayerAnimator
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_walk_up2.png"),
                     new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_idle_up.png"),
                 ]   
+            },
+            {
+                "death", [
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_die_1.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_die_2.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_die_3.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_die_4.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_die_5.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_die_6.png"),
+                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomberman_die_7.png"),
+                ]
             }
         };
 
     }
 
+    public bool PlayerDeath()
+    {
+        return current_animation == "death" && current_frame== 0;
+    }
+
+    public bool PlayerDeathEnd()
+    {
+        return current_animation == "death" && current_frame == animations[current_animation].Length - 1 && frame_counter == 0;
+    }
+
     public void SetAnimation(string animation)
     {
-        if (currentAnimation != animation)
+        if (current_animation != animation)
         {
-            currentAnimation = animation;
-            currentFrame = 0;
-            frameCounter = 0;
+            current_animation = animation;
+            current_frame = 0;
+            frame_counter = 0;
         }
     }
 
     public ImageSurface GetCurrentFrame()
     {
-        var frames = animations[currentAnimation];
-        if (frames.Length == 1)
+        return animations[current_animation][current_frame];
+    }
+    
+    public void UpdateAnimation()
+    {
+        frame_counter++;
+        if (frame_counter >= frame_speed)
         {
-            return frames[0];
+            frame_counter = 0;
+            current_frame = (current_frame + 1) % animations[current_animation].Length;
         }
-        
-        frameCounter++;
-
-        if (frameCounter >= frameSpeed)
-        {
-            frameCounter = 0;
-            currentFrame = (currentFrame + 1) % frames.Length;
-        }
-        return frames[currentFrame];
     }
 }

@@ -1,18 +1,35 @@
 ﻿using Cairo;
 
 namespace bomber_man;
-class Game
+public class Game
 {
     private int rows = 13;
     private int cols = 11;
     public int[,] grid;
-    public Player player1 = new Player(100, 100);
+    public Player player1;
+    PlayerAnimator player1_animator;
+    BombAnimator bomb_animator;
 
-    public bool player1_left, player1_right, player2_up, player1_down, player1_bomb;
+    public bool player1_left, player1_right, player2_up, player1_down;
     public string last_direction = "down";
 
+    public Game()
+    {
+        grid = new int[rows, cols];
+        InitializeGrid();
+        player1 = new Player(1 * GameConfig.TILE_WIDTH, 1 * GameConfig.TILE_HEIGHT, this);
+        player1_animator = new PlayerAnimator();
+        bomb_animator = new BombAnimator();
+    }
+    
     public void Tick(ImageSurface sprite)
     {
+
+        if (player1 == null || player1.is_dead)
+        {
+            return;
+        }
+
         player1.Move(player1_left, player1_right, player2_up, player1_down, (rect) => CollisionCheck(rect), sprite);
         if (player1.current_bomb != null)
         {
@@ -24,14 +41,6 @@ class Game
             }
         }
     }
-    
-    public Game()
-    {
-        grid = new int[rows, cols];
-        InitializeGrid();
-        player1 = new Player(1 * GameConfig.TILE_WIDTH, 1 * GameConfig.TILE_HEIGHT);
-    }
-
     void InitializeGrid()
     {
         for (int i = 0; i < rows; i++)
@@ -59,6 +68,18 @@ class Game
                         return true;
                     }
                 }
+            }
+        }
+
+        if (player1.current_bomb != null && player1.current_bomb.exploded && !player1.current_bomb.explosion_finished)
+        {
+            if (player1.current_bomb.ExplosionRect().IntersectsWith(player_rect))
+            {
+                if (!player1.is_dead)
+                {
+                    player1.is_dead = true;
+                }
+                return true;
             }
         }
         return false;
