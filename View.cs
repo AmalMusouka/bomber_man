@@ -10,6 +10,7 @@ class View : DrawingArea
     Game game;
     Color backgroundColor = new Color(173, 173, 173);
     public PlayerAnimator player1_animator;
+    public PlayerAnimator player2_animator;
     public BombAnimator bomb_animator;
     private Tiles[,] grid;
     private TileSet tileSet;
@@ -23,6 +24,7 @@ class View : DrawingArea
     {
         this.game = game;
         player1_animator = new PlayerAnimator();
+        player2_animator = new PlayerAnimator();
         bomb_animator = new BombAnimator();
         tileSet = new TileSet();
         SetSizeRequest(tile_width * rows, tile_height * cols);
@@ -30,35 +32,133 @@ class View : DrawingArea
         GLib.Timeout.Add(16, () =>
         {
             player1_animator.UpdateAnimation();
+            player2_animator.UpdateAnimation();
             bomb_animator.UpdateAnimation();
             QueueDraw();  
             return true;   
         });
     }
-    
+
+    public void DrawPlayer(Player player, PlayerAnimator player_animator, BombAnimator bomb_animator, Context c, bool player_up, bool player_down, bool player_left, bool player_right, string player_last_direction, bool color)
+    {
+        if (player.current_bomb != null)
+        {
+            var bomb = player.current_bomb;
+            //var bomb_sprite = new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_1.png");
+            bomb_animator.SetAnimation(bomb.exploded ? "explosion" : "bomb");
+            var bomb_sprite = bomb_animator.GetCurrentFrame();
+
+            c.Save();
+            c.Translate(bomb.x, bomb.y);
+            c.Scale((double)tile_width / bomb_sprite.Width, (double)tile_height / bomb_sprite.Height);
+            c.SetSourceSurface(bomb_sprite, 0, 0);
+            c.Paint();
+            c.Restore();
+
+            if (bomb.exploded && bomb_animator.ExplosionEnded())
+            {
+                bomb.explosion_finished = true;
+            }
+        }
+
+
+        if (player != null)
+        {
+            if (player.is_dead)
+            {
+                player_animator.SetAnimation("death");
+
+                if (player_animator.PlayerDeathEnd())
+                {
+                    player = null;
+                    return;
+                }
+            }
+            else
+            {
+                if (player_down)
+                {
+                    player_animator.SetAnimation("move_down");
+                }
+                else if (player_left)
+                {
+                    player_animator.SetAnimation("move_left");
+                }
+                else if (player_right)
+                {
+                    player_animator.SetAnimation("move_right");
+                }
+                else if (player_up)
+                {
+                    player_animator.SetAnimation("move_up");
+                }
+                else
+                {
+                    player_animator.SetAnimation("idle_" + player_last_direction);
+                }
+            }
+
+            var sprite = player_animator.GetCurrentFrame();
+
+            c.Save();
+            c.Translate(player.player_x, player.player_y);
+            c.Scale((double)tile_width / sprite.Width, (double)tile_height / sprite.Height);
+            c.SetSourceSurface(sprite, 0, 0);
+            c.Paint();
+            if (color)
+            {
+                c.SetSourceRGBA(1.0, 0.0, 0.0, 0.6); // red, 50% transparent
+                c.MaskSurface(sprite, 0, 0);
+            }
+            c.Restore();
+        }
+    }
+
     public void OnKeyPressEvent(object o, KeyPressEventArgs args)
     {
+        Console.WriteLine("Key pressed" + args.Event.Key.ToString());
         switch (args.Event.Key)
         {
             // player 1
             case Key.a :
                 game.player1_left = true;
-                game.last_direction = "left";
+                game.player1_last_direction = "left";
                 break;
             case Key.d :
                 game.player1_right = true;
-                game.last_direction = "right";
+                game.player1_last_direction = "right";
                 break;
             case Key.w :
-                game.player2_up = true;
-                game.last_direction = "up";
+                game.player1_up = true;
+                game.player1_last_direction = "up";
                 break;
             case Key.s :
                 game.player1_down = true;
-                game.last_direction = "down";
+                game.player1_last_direction = "down";
                 break;
             case Key.Control_L :
                 game.player1.PlaceBomb();
+                break;
+            
+            // player 2
+            case Key.j :
+                game.player2_left = true;
+                game.player2_last_direction = "left"; 
+                break;
+            case Key.l :
+                game.player2_right = true;
+                game.player2_last_direction = "right";
+                break;
+            case Key.i :
+                game.player2_up = true;
+                game.player2_last_direction = "up";
+                break;
+            case Key.k :
+                game.player2_down = true;
+                game.player2_last_direction = "down";
+                break;
+            case Key.u :
+                game.player2.PlaceBomb();
                 break;
         }   
     }
@@ -75,12 +175,25 @@ class View : DrawingArea
                 game.player1_right = false;
                 break;
             case Key.w :
-                game.player2_up = false;
+                game.player1_up = false;
                 break;
             case Key.s :
                 game.player1_down = false;
                 break;
 
+            // player 2
+            case Key.j :
+                game.player2_left = false;
+                break;
+            case Key.l :
+                game.player2_right = false;
+                break;
+            case Key.i :
+                game.player2_up = false;
+                break;
+            case Key.k :
+                game.player2_down = false;
+                break;
         }   
     }
 
@@ -101,70 +214,16 @@ class View : DrawingArea
             }
         }
 
-        if (game.player1 != null && game.player1.current_bomb != null)
-        {
-            var bomb = game.player1.current_bomb;
-            //var bomb_sprite = new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_1.png");
-            bomb_animator.SetAnimation(bomb.exploded ? "explosion" : "bomb");
-            var bomb_sprite = bomb_animator.GetCurrentFrame();
-
-            c.Save();
-            c.Translate(bomb.x, bomb.y);
-            c.Scale((double)tile_width / bomb_sprite.Width, (double)tile_height / bomb_sprite.Height);
-            c.SetSourceSurface(bomb_sprite, 0, 0);
-            c.Paint();
-            c.Restore();
-
-            if (bomb.exploded && bomb_animator.ExplosionEnded())
-            {
-                bomb.explosion_finished = true;
-            }
-        }
-
         if (game.player1 != null)
         {
-            if (game.player1.is_dead)
-            {
-                player1_animator.SetAnimation("death");
+            DrawPlayer(game.player1, player1_animator, bomb_animator, c, game.player1_up, game.player1_down,
+                game.player1_left, game.player1_right, game.player1_last_direction, false);
+        }
 
-                if (player1_animator.PlayerDeathEnd())
-                {
-                    game.player1 = null;
-                    return true;
-                }
-            }
-            else
-            {
-                if (game.player1_down)
-                {
-                    player1_animator.SetAnimation("move_down");
-                }
-                else if (game.player1_left)
-                {
-                    player1_animator.SetAnimation("move_left");
-                }
-                else if (game.player1_right)
-                {
-                    player1_animator.SetAnimation("move_right");
-                }
-                else if (game.player2_up)
-                {
-                    player1_animator.SetAnimation("move_up");
-                }
-                else
-                {
-                    player1_animator.SetAnimation("idle_" + game.last_direction);
-                }
-            }
-
-            var sprite = player1_animator.GetCurrentFrame();
-
-            c.Save();
-            c.Translate(game.player1.player_x, game.player1.player_y);
-            c.Scale((double)tile_width / sprite.Width, (double)tile_height / sprite.Height);
-            c.SetSourceSurface(sprite, 0, 0);
-            c.Paint();
-            c.Restore();
+        if (game.player2 != null)
+        {
+            DrawPlayer(game.player2, player2_animator, bomb_animator, c, game.player2_up, game.player2_down,
+                game.player2_left, game.player2_right, game.player2_last_direction, true);
         }
 
         return true;
