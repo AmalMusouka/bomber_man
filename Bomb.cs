@@ -4,7 +4,6 @@ public class Bomb
 {
     public int x;
     public int y;
-    public int radius = 2;
     public int timer = 3000;
     public DateTime placed_time;
     
@@ -14,11 +13,10 @@ public class Bomb
     public int tile_x;
     public int tile_y;
     
-    public Bomb(int bomb_x, int bomb_y, int explosion_radius = 2, int time = 3000)
+    public Bomb(int bomb_x, int bomb_y, int time = 3000)
     {
         x = bomb_x;
         y = bomb_y;
-        radius = explosion_radius;
         timer = time;
         placed_time = DateTime.Now;
 

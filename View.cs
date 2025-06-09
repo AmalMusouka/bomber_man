@@ -18,7 +18,6 @@ class View : DrawingArea
     private int cols = 11;
     private const int tile_width = GameConfig.TILE_WIDTH;
     private const int tile_height = GameConfig.TILE_HEIGHT;
-    public List<(int, int)> tiles = new List<(int, int)>();
 
     public View(Game game)
     {
@@ -107,7 +106,7 @@ class View : DrawingArea
             c.Paint();
             if (color)
             {
-                c.SetSourceRGBA(1.0, 0.0, 0.0, 0.6); // red, 50% transparent
+                c.SetSourceRGBA(1.0, 0.0, 0.0, 0.6); // red
                 c.MaskSurface(sprite, 0, 0);
             }
             c.Restore();

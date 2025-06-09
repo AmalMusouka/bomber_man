@@ -7,46 +7,48 @@ public class BombAnimator
     private int current_frame = 0;
     private int frame_counter = 0;
     public int frame_speed = 8; // ticks per switch
-
+    private string sprite_dir;
     private string current_animation = "bomb";
     
     public BombAnimator()
     {
+        sprite_dir = System.IO.Path.Combine(Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory()).FullName).FullName).FullName, "sprites");        
+        Console.WriteLine("Loading idle_down sprite from: " + sprite_dir);
         animations = new Dictionary<string, ImageSurface[]>
         {
             {
                 "bomb", 
                 [
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_1.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_2.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_3.png")
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "bomb_1.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "bomb_2.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "bomb_3.png"))
                 ]
             },
             {
                 "explosion", 
                 [
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/explosion_1.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/explosion_2.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/explosion_3.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/explosion_4.png")
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "explosion_1.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "explosion_2.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "explosion_3.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "explosion_4.png"))
                 ]
             },
             {
                 "horizontal_explosion",
                 [
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/horizontal_explosion_1.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/horizontal_explosion_2.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/horizontal_explosion_3.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/horizontal_explosion_4.png")
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "horizontal_explosion_1.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "horizontal_explosion_2.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "horizontal_explosion_3.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "horizontal_explosion_4.png"))
                 ]
             },
             {
                 "vertical_explosion",
                 [
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/vertical_explosion_1.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/vertical_explosion_2.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/vertical_explosion_3.png"),
-                    new ImageSurface("/home/amalmusouka/bomber_man/sprites/vertical_explosion_4.png"),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "vertical_explosion_1.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "vertical_explosion_2.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "vertical_explosion_3.png")),
+                    new ImageSurface(System.IO.Path.Combine(sprite_dir, "vertical_explosion_4.png"))
                 ]
             }
 
@@ -69,15 +71,7 @@ public class BombAnimator
             current_frame = 0;
             frame_counter = 0;
         }
-
-        if (animation == "explosion")
-        {
-            frame_speed = 4;
-        }
-        else
-        {
-            frame_speed = 8;
-        }
+        frame_speed = animation == "explosion" ? 4 : 8;
     }
 
     public ImageSurface GetCurrentFrame()

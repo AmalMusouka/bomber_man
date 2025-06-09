@@ -15,15 +15,15 @@ public class Game
     public bool player1_left, player1_right, player1_up, player1_down;
     public bool player2_left, player2_right, player2_up, player2_down;
     public string player1_last_direction = "down";
-    public string player2_last_direction = "up";
+    public string player2_last_direction = "down";
 
     public Game()
     {
         grid = new int[rows, cols];
         InitializeGrid();
         player1 = new Player(1 * GameConfig.TILE_WIDTH, 1 * GameConfig.TILE_HEIGHT, this);
-        player1_animator = new PlayerAnimator();
         player2 = new Player(1 * GameConfig.TILE_WIDTH, 1 * GameConfig.TILE_HEIGHT, this);
+        player1_animator = new PlayerAnimator();
         player2_animator = new PlayerAnimator();
         bomb_animator = new BombAnimator();
     }
