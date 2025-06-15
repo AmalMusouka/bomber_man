@@ -2,16 +2,14 @@ namespace bomber_man;
 using Cairo;
 using Gtk;
 using Gdk;
-using Color = Cairo.Color;
-using Key = Gdk.Key;
 
 class View : DrawingArea
 {
     Game game;
-    Color backgroundColor = new Color(173, 173, 173);
     public PlayerAnimator player1_animator;
     public PlayerAnimator player2_animator;
-    public BombAnimator bomb_animator;
+    public BombAnimator bomb_animator_player_1;
+    public BombAnimator bomb_animator_player_2;
     private Tiles[,] grid;
     private TileSet tileSet;
     private int rows = 13;
@@ -19,45 +17,117 @@ class View : DrawingArea
     private const int tile_width = GameConfig.TILE_WIDTH;
     private const int tile_height = GameConfig.TILE_HEIGHT;
 
+    /// <summary>
+    /// View constructor consists of all the animation objects and states as well as tiles
+    /// </summary>
     public View(Game game)
     {
         this.game = game;
         player1_animator = new PlayerAnimator();
         player2_animator = new PlayerAnimator();
-        bomb_animator = new BombAnimator();
+        bomb_animator_player_1 = new BombAnimator();
+        bomb_animator_player_2 = new BombAnimator();
         tileSet = new TileSet();
-        SetSizeRequest(tile_width * rows, tile_height * cols);
+        SetSizeRequest(tile_width * cols, tile_height * rows);
         AddEvents((int)EventMask.AllEventsMask);
         GLib.Timeout.Add(16, () =>
         {
             player1_animator.UpdateAnimation();
             player2_animator.UpdateAnimation();
-            bomb_animator.UpdateAnimation();
+            bomb_animator_player_1.UpdateAnimation();
+            bomb_animator_player_2.UpdateAnimation();
             QueueDraw();  
             return true;   
         });
     }
+    
 
+    /// <summary>
+    /// Draws the player and all player related objects and animations
+    /// </summary>
     public void DrawPlayer(Player player, PlayerAnimator player_animator, BombAnimator bomb_animator, Context c, bool player_up, bool player_down, bool player_left, bool player_right, string player_last_direction, bool color)
     {
+        
         if (player.current_bomb != null)
         {
             var bomb = player.current_bomb;
-            //var bomb_sprite = new ImageSurface("/home/amalmusouka/bomber_man/sprites/bomb_1.png");
-            bomb_animator.SetAnimation(bomb.exploded ? "explosion" : "bomb");
-            var bomb_sprite = bomb_animator.GetCurrentFrame();
-
-            c.Save();
-            c.Translate(bomb.x, bomb.y);
-            c.Scale((double)tile_width / bomb_sprite.Width, (double)tile_height / bomb_sprite.Height);
-            c.SetSourceSurface(bomb_sprite, 0, 0);
-            c.Paint();
-            c.Restore();
-
-            if (bomb.exploded && bomb_animator.ExplosionEnded())
+            if (!bomb.exploded)
             {
-                bomb.explosion_finished = true;
+                bomb_animator.SetAnimation("bomb");
+                var bomb_sprite = bomb_animator.GetCurrentFrame();
+
+                c.Save();
+                c.Translate(bomb.x, bomb.y);
+                c.Scale((double)tile_width / bomb_sprite.Width, (double)tile_height / bomb_sprite.Height);
+                c.SetSourceSurface(bomb_sprite, 0, 0);
+                c.Paint();
+                c.Restore();
             }
+            else
+            {
+                bomb_animator.SetAnimation("explosion");
+                var explosion_center = bomb_animator.GetExplosionFrame("horizontal_explosion_center");
+
+                // Draw center explosion
+                c.Save();
+                c.Translate(bomb.tile_x * GameConfig.TILE_WIDTH, bomb.tile_y * GameConfig.TILE_HEIGHT);
+                c.Scale((double)GameConfig.TILE_WIDTH / explosion_center.Width,
+                    (double)GameConfig.TILE_HEIGHT / explosion_center.Height);
+                c.SetSourceSurface(explosion_center, 0, 0);
+                c.Paint();
+                c.Restore();
+                
+                foreach (var (dx, dy) in bomb.explosion_tiles)
+                {
+
+                    string key;
+
+                    if (dx == bomb.tile_x && dy == bomb.tile_y)
+                    {
+                        key = "horizontal_explosion_center";
+                    }
+                    else if (dx < bomb.tile_x)
+                    {
+                        key = (dx == bomb.tile_x - 1 || !bomb.explosion_tiles.Contains((dx - 1, dy)))
+                            ? "horizontal_explosion_left"
+                            : "horizontal_explosion";
+                    }
+                    else if (dx > bomb.tile_x)
+                    {
+                        key = (dx == bomb.tile_x + 1 || !bomb.explosion_tiles.Contains((dx + 1, dy)))
+                            ? "horizontal_explosion_right"
+                            : "horizontal_explosion";
+                    }
+                    else if (dy < bomb.tile_y)
+                    {
+                        key = (dy == bomb.tile_y - 1 || !bomb.explosion_tiles.Contains((dx, dy - 1)))
+                            ? "vertical_explosion_up"
+                            : "vertical_explosion";
+                    }
+                    else 
+                    {
+                        key = (dy == bomb.tile_y + 1 || !bomb.explosion_tiles.Contains((dx, dy + 1)))
+                            ? "vertical_explosion_down"
+                            : "vertical_explosion";
+                    }
+
+                    var frame = bomb_animator.GetExplosionFrame(key);
+
+                    c.Save();
+                    c.Translate(dx * GameConfig.TILE_WIDTH, dy * GameConfig.TILE_HEIGHT);
+                    c.Scale((double)GameConfig.TILE_WIDTH / frame.Width,
+                        (double)GameConfig.TILE_HEIGHT / frame.Height);
+                    c.SetSourceSurface(frame, 0, 0);
+                    c.Paint();
+                    c.Restore();
+                }
+
+                if (bomb.exploded && bomb_animator.ExplosionEnded())
+                {
+                    bomb.explosion_finished = true;
+                }
+            }
+
         }
 
 
@@ -104,7 +174,7 @@ class View : DrawingArea
             c.Scale((double)tile_width / sprite.Width, (double)tile_height / sprite.Height);
             c.SetSourceSurface(sprite, 0, 0);
             c.Paint();
-            if (color)
+            if (color) // player 2
             {
                 c.SetSourceRGBA(1.0, 0.0, 0.0, 0.6); // red
                 c.MaskSurface(sprite, 0, 0);
@@ -115,87 +185,17 @@ class View : DrawingArea
 
     public void OnKeyPressEvent(object o, KeyPressEventArgs args)
     {
-        Console.WriteLine("Key pressed" + args.Event.Key.ToString());
-        switch (args.Event.Key)
-        {
-            // player 1
-            case Key.a :
-                game.player1_left = true;
-                game.player1_last_direction = "left";
-                break;
-            case Key.d :
-                game.player1_right = true;
-                game.player1_last_direction = "right";
-                break;
-            case Key.w :
-                game.player1_up = true;
-                game.player1_last_direction = "up";
-                break;
-            case Key.s :
-                game.player1_down = true;
-                game.player1_last_direction = "down";
-                break;
-            case Key.Control_L :
-                game.player1.PlaceBomb();
-                break;
-            
-            // player 2
-            case Key.j :
-                game.player2_left = true;
-                game.player2_last_direction = "left"; 
-                break;
-            case Key.l :
-                game.player2_right = true;
-                game.player2_last_direction = "right";
-                break;
-            case Key.i :
-                game.player2_up = true;
-                game.player2_last_direction = "up";
-                break;
-            case Key.k :
-                game.player2_down = true;
-                game.player2_last_direction = "down";
-                break;
-            case Key.u :
-                game.player2.PlaceBomb();
-                break;
-        }   
+        game.OnKeyPress(args.Event.Key);
     }
 
     public void OnKeyReleaseEvent(object o, KeyReleaseEventArgs args)
     {
-        switch (args.Event.Key)
-        {
-            // player 1
-            case Key.a :
-                game.player1_left = false;
-                break;
-            case Key.d :
-                game.player1_right = false;
-                break;
-            case Key.w :
-                game.player1_up = false;
-                break;
-            case Key.s :
-                game.player1_down = false;
-                break;
-
-            // player 2
-            case Key.j :
-                game.player2_left = false;
-                break;
-            case Key.l :
-                game.player2_right = false;
-                break;
-            case Key.i :
-                game.player2_up = false;
-                break;
-            case Key.k :
-                game.player2_down = false;
-                break;
-        }   
+        game.OnKeyRelease(args.Event.Key);
     }
 
+    /// <summary>
+    /// Draws the tiles and every player as well as player objects
+    /// </summary>
     protected override bool OnDrawn(Context c)
     {
         for (int i = 0; i < 13; i++)
@@ -210,19 +210,59 @@ class View : DrawingArea
                 c.SetSourceSurface(surface, 0, 0);
                 c.Paint();
                 c.Restore();
+                
             }
         }
 
         if (game.player1 != null)
         {
-            DrawPlayer(game.player1, player1_animator, bomb_animator, c, game.player1_up, game.player1_down,
-                game.player1_left, game.player1_right, game.player1_last_direction, false);
+            var player_1_states = game.player_movement_states[0];
+            DrawPlayer(
+                game.player1,
+                player1_animator,
+                bomb_animator_player_1,
+                c,
+                player_up: player_1_states[(int)Game.binds.up],
+                player_down: player_1_states[(int)Game.binds.down],
+                player_left: player_1_states[(int)Game.binds.left],
+                player_right: player_1_states[(int)Game.binds.right],
+                player_last_direction: game.player1_last_direction,
+                color: false);
         }
 
         if (game.player2 != null)
         {
-            DrawPlayer(game.player2, player2_animator, bomb_animator, c, game.player2_up, game.player2_down,
-                game.player2_left, game.player2_right, game.player2_last_direction, true);
+            var player_2_states = game.player_movement_states[1];
+            DrawPlayer(
+                game.player2,
+                player2_animator,
+                bomb_animator_player_2,
+                c,
+                player_up: player_2_states[(int)Game.binds.up],
+                player_down: player_2_states[(int)Game.binds.down],
+                player_left: player_2_states[(int)Game.binds.left],
+                player_right: player_2_states[(int)Game.binds.right],
+                player_last_direction: game.player2_last_direction,
+                color: true);
+        }
+        
+        if (game.winner != null)
+        {
+            c.SetSourceRGBA(0, 0, 0, 0.5);
+            c.Rectangle(0, 0, Allocation.Width, Allocation.Height);
+            c.Fill();
+            c.SetSourceRGB(1, 1, 1);
+            c.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Bold);
+            c.SetFontSize(36);
+
+            string message = $"{game.winner} Wins!";
+            TextExtents extents = c.TextExtents(message);
+
+            double x = (Allocation.Width - extents.Width) / 2 - extents.XBearing;
+            double y = (Allocation.Height - extents.Height) / 2 - extents.YBearing;
+            c.MoveTo(x, y);
+            c.ShowText(message);
+            c.Stroke();
         }
 
         return true;

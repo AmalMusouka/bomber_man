@@ -16,7 +16,10 @@ public class Player
         player_y = start_y;
         this.game = game;
     }
-
+    
+    /// <summary>
+    /// Handles player movement
+    /// </summary>
     public void Move(bool move_left, bool move_right, bool move_up, bool move_down, Func<System.Drawing.Rectangle, bool> collision_check, ImageSurface sprite)
     {
 
@@ -57,6 +60,9 @@ public class Player
         }
     }
 
+    /// <summary>
+    /// handles player bomb placement
+    /// </summary>
     public void PlaceBomb()
     {
         
